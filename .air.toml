@@ -1,0 +1,11 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+
+cmd = "go build -o ./tmp/main cmd/main/main.go"
+
+bin = "tmp/main"
+full_bin = "tmp/main -config-yaml dev-config.yaml"
+
+exclude_dir = ["mongo-data"]

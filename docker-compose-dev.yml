@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  nocut-api-air:
+    image: cosmtrek/air
+    working_dir: /nocut
+    volumes:
+      - ./:/nocut
+    ports:
+      - 8080:8080
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME_FILE: /run/secrets/mongo_root_username
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo_root_password
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+    volumes:
+      - ./_mongo-data/:/data/db
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME_FILE: /run/secrets/mongo_root_username
+      ME_CONFIG_MONGODB_ADMINPASSWORD_FILE: /run/secrets/mongo_root_password
+      ME_CONFIG_MONGODB_BASICAUTH_USERNAME_FILE: /run/secrets/mongo_express_admin_username
+      ME_CONFIG_MONGODB_BASICAUTH_PASSWORD_FILE: /run/secrets/mongo_express_admin_password
+      ME_CONFIG_MONGODB_SERVER: "mongo"
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+      - mongo_express_admin_username
+      - mongo_express_admin_password
+    depends_on:
+      - mongo
+
+secrets:
+  mongo_root_username:
+    file: ./mongo_root_username.txt
+  mongo_root_password:
+    file: ./mongo_root_password.txt
+  mongo_express_admin_username:
+    file: ./mongo-express_admin_username.txt
+  mongo_express_admin_password:
+    file: ./mongo-express_admin_password.txt
+  

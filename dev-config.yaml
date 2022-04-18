@@ -1,0 +1,6 @@
+log_level: debug
+mongodb:
+  host: mongo
+  username_file: /run/secrets/mongo_root_username
+  password_file: /run/secrets/mongo_root_password
+  link_ttl: 3m

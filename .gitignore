@@ -1,0 +1,12 @@
+tmp/
+
+mongo_root_username.txt
+mongo_root_password.txt
+mongo-express_admin_username.txt
+mongo-express_admin_password.txt
+
+_mongo-data/
+
+.vscode
+
+logs/
