@@ -37,7 +37,7 @@ func NewHandler(logger logging.Logger, storage Storage, linkTTL time.Duration) h
 }
 
 func (h *handler) Register(router *mux.Router) {
-	router.HandleFunc("/links", h.GetList).Methods("GET")
+	// router.HandleFunc("/links", h.GetList).Methods("GET")
 	router.HandleFunc("/links", h.CreateHandler).Methods("POST")
 	router.HandleFunc("/links/{id}", h.GetLinkByIdHandler).Methods("GET")
 	router.HandleFunc("/{slug}", h.GetLinkSlugHandler).Methods("GET")
@@ -87,8 +87,4 @@ func (h *handler) GetLinkByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	resp, _ := json.Marshal(link)
 	w.Write(resp)
-}
-
-func (h *handler) GetList(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("This is the list of active link"))
 }
