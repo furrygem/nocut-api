@@ -46,12 +46,12 @@ func (h *handler) Register(router *mux.Router) {
 func (h *handler) GetLinkSlugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	slug := vars["slug"]
-	id, err := UrlToId(slug)
+	id, err := URLToID(slug)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Bad Request. %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	l, err := h.service.GetLinkById(context.Background(), id)
+	l, err := h.service.GetLinkByID(context.Background(), id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Cannot get link by id. %s", err.Error()), http.StatusInternalServerError)
 	}
@@ -67,6 +67,11 @@ func (h *handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	l, err := h.service.Create(context.Background(), dto)
 	if err != nil {
+		e, ok := err.(*URLCheckException)
+		if ok {
+			h.service.SendURLCheckResults(e, w)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -80,7 +85,7 @@ func (h *handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 func (h *handler) GetLinkByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	link, err := h.service.GetLinkById(context.Background(), id)
+	link, err := h.service.GetLinkByID(context.Background(), id)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

@@ -11,7 +11,7 @@ type Link struct {
 	ExpireAt        time.Time     `json:"expire_at,omitempty" bson:"expire_at"`
 	CreatedAt       time.Time     `json:"created_at,omitempty" bson:"created_at"`
 	TTLMilliseconds time.Duration `json:"ttl_milliseconds,omitempty" bson:"ttl"`
-	Slug            string        `json:"slug,omitempty"`
+	Slug            string        `json:"slug,omitempty" bson:"slug,omitempty"`
 }
 
 type CreateLinkDTO struct {

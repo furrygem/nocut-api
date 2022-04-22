@@ -21,19 +21,24 @@ type db struct {
 
 // func (d *db)
 
-func (d *db) Create(ctx context.Context, link links.Link) (string, error) {
+// Create creates a new link in the database. Returns (id, isDup, err)
+func (d *db) Create(ctx context.Context, link links.Link) (string, bool, error) {
 	d.logger.Debug("create link")
 	r, err := d.collection.InsertOne(ctx, link)
 	if err != nil {
-		return "", fmt.Errorf("Failed to insert link. %v", err)
+		if IsDup(err) {
+			return "", true, fmt.Errorf("Failed to insert link. %v", err)
+		}
+		return "", false, fmt.Errorf("Failed to insert link. %v", err)
 	}
 	d.logger.Debug("Convert InsertedID to ObjectID")
 	oid, ok := r.InsertedID.(primitive.ObjectID)
 	if ok {
-		return oid.Hex(), nil
+		return oid.Hex(), false, nil
 	}
 	d.logger.Trace(link)
-	return "", fmt.Errorf("Failed to convert ObjectID to hex. oid: '%s'", oid)
+	d.logger.Debug(err.Error())
+	return "", false, fmt.Errorf("Failed to convert ObjectID to hex. oid: '%s'", oid)
 }
 
 // func (d *db) FindOne(ctx context.Context, id string) (l links.Link, err error) {
@@ -136,6 +141,23 @@ func (d *db) FindOne(ctx context.Context, id string) (links.Link, error) {
 	return l, err
 }
 
+func (d *db) FindOneBySource(ctx context.Context, source string) (links.Link, error) {
+	var l links.Link
+	filter := bson.D{
+		{"source", source},
+	}
+	result := d.collection.FindOne(ctx, filter)
+	d.logger.Debugf("Source: %s", source)
+	if err := result.Err(); err != nil {
+		return l, fmt.Errorf("Failed to find link by source '%s'. %v", source, err)
+	}
+	err := result.Decode(&l)
+	if err != nil {
+		return l, fmt.Errorf("Failed to decode link by source '%s'. %v", source, err)
+	}
+	return l, nil
+}
+
 func (d *db) IncrViews(ctx context.Context, id string) error {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -157,16 +179,23 @@ func (d *db) IncrViews(ctx context.Context, id string) error {
 	return nil
 }
 
-func (d *db) CreateIndexes(ctx context.Context) (string, error) {
-	index := mongo.IndexModel{
+func (d *db) CreateIndices(ctx context.Context) ([]string, error) {
+	expireAtIndex := mongo.IndexModel{
 		Keys:    bson.M{"expire_at": 1},
 		Options: options.Index().SetExpireAfterSeconds(0),
 	}
-	name, err := d.collection.Indexes().CreateOne(ctx, index)
-	if err != nil {
-		return "", fmt.Errorf("Failed to create index. %v", err)
+	uniqueSourceIndex := mongo.IndexModel{
+		Keys:    bson.M{"source": 1},
+		Options: options.Index().SetUnique(true),
 	}
-	return name, err
+	models := []mongo.IndexModel{}
+	models = append(models, expireAtIndex)
+	models = append(models, uniqueSourceIndex)
+	names, err := d.collection.Indexes().CreateMany(ctx, models)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create index. %v", err)
+	}
+	return names, err
 }
 
 func NewStorage(database *mongo.Database, collection string, logger *logging.Logger) links.Storage {
@@ -174,10 +203,12 @@ func NewStorage(database *mongo.Database, collection string, logger *logging.Log
 		collection: database.Collection(collection),
 		logger:     logger,
 	}
-	name, err := d.CreateIndexes(context.Background())
+	names, err := d.CreateIndices(context.Background())
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	log.Printf("Cretead index: %s\n", name)
+	for _, name := range names {
+		log.Printf("Cretead index: %s\n", name)
+	}
 	return d
 }
