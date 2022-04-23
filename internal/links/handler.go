@@ -2,6 +2,7 @@ package links
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,8 +40,28 @@ func NewHandler(logger logging.Logger, storage Storage, linkTTL time.Duration) h
 func (h *handler) Register(router *mux.Router) {
 	// router.HandleFunc("/links", h.GetList).Methods("GET")
 	router.HandleFunc("/links", h.CreateHandler).Methods("POST")
-	router.HandleFunc("/links/{id}", h.GetLinkByIdHandler).Methods("GET")
+	router.HandleFunc("/links/{id}", h.GetLinkByIDHandler).Methods("GET")
 	router.HandleFunc("/{slug}", h.GetLinkSlugHandler).Methods("GET")
+	router.HandleFunc("/url/{b64url}/check", h.CheckLinkHandler).Methods("GET")
+}
+
+func (h *handler) CheckLinkHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	l, err := base64.RawURLEncoding.DecodeString(vars["b64url"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	link := string(l)
+	uce := h.service.CheckLinkService(link)
+	resp, err := uce.JSON()
+	if err != nil {
+		h.logger.Errorf("Error marshaling URLCheckException '%v' JSON. %v", resp, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+	return
 }
 
 func (h *handler) GetLinkSlugHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +72,7 @@ func (h *handler) GetLinkSlugHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Bad Request. %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	l, err := h.service.GetLinkByID(context.Background(), id)
+	l, err := h.service.GetLinkByIDService(context.Background(), id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Cannot get link by id. %s", err.Error()), http.StatusInternalServerError)
 	}
@@ -65,11 +86,19 @@ func (h *handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	l, err := h.service.Create(context.Background(), dto)
+	l, err := h.service.CreateService(context.Background(), dto)
 	if err != nil {
 		e, ok := err.(*URLCheckException)
 		if ok {
-			h.service.SendURLCheckResults(e, w)
+			// h.service.SendURLCheckResults(e, w)
+			resp, err := e.JSON()
+			if err != nil {
+				h.logger.Errorf("Error marshaling URLCheckException '%v' JSON. %v", e, err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(resp)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,16 +109,18 @@ func (h *handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resp)
+	return
 }
 
-func (h *handler) GetLinkByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetLinkByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	link, err := h.service.GetLinkByID(context.Background(), id)
+	link, err := h.service.GetLinkByIDService(context.Background(), id)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	resp, _ := json.Marshal(link)
 	w.Write(resp)
+	return
 }

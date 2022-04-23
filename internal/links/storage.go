@@ -2,6 +2,7 @@ package links
 
 import "context"
 
+// Storage interface
 type Storage interface {
 	Create(ctx context.Context, link Link) (string, bool, error)
 	FindOne(ctx context.Context, id string) (Link, error)

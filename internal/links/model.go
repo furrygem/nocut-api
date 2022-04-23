@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Link model
 type Link struct {
 	ID              string        `json:"id,omitempty" bson:"_id,omitempty"`
 	Source          string        `json:"source" bson:"source"`
@@ -14,6 +15,7 @@ type Link struct {
 	Slug            string        `json:"slug,omitempty" bson:"slug,omitempty"`
 }
 
+// CreateLinkDTO Data Tansfer Object for Link creation
 type CreateLinkDTO struct {
 	Source string `json:"source"`
 }

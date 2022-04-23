@@ -16,3 +16,14 @@ func (e *URLCheckException) Error() string {
 	r, _ := json.Marshal(e)
 	return fmt.Sprintf("URL checks failed. '%s'", r)
 }
+
+/* JSON Marshal URLCheckException
+{"host_is_up":bool,"url_is_valid":bool}
+*/
+func (e *URLCheckException) JSON() ([]byte, error) {
+	result, err := json.Marshal(e)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

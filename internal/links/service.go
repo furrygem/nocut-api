@@ -2,53 +2,50 @@ package links
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/furrygem/nocut-api/pkg/logging"
 )
 
+// Service object
 type Service struct {
 	storage Storage
 	logger  *logging.Logger
 	linkTTL time.Duration
 }
 
-func (s *Service) SendURLCheckResults(ucs *URLCheckException, rw http.ResponseWriter) error {
-	resp, _ := json.Marshal(ucs)
-	_, err := rw.Write(resp)
-	if err != nil {
-		return err
-	}
-	return nil
+// CheckLinkService for CheckLinkHandler
+func (s *Service) CheckLinkService(url string) *URLCheckException {
+	uce := s.runURLChecks(url)
+	return uce
 }
 
 func (s *Service) runURLChecks(sourceURL string) *URLCheckException {
-	ucs := URLCheckException{
+	uc := URLCheckException{
 		HostIsUp:   false,
 		URLIsValid: false,
 	}
 
 	urlisvalid, err := URLIsValid(sourceURL)
-	ucs.URLIsValid = urlisvalid
+	uc.URLIsValid = urlisvalid
 	if err != nil {
 		s.logger.Warning("URL Host Is not valid. Assuming the host is not available.")
-		ucs.HostIsUp = false
+		uc.HostIsUp = false
 	}
 
-	if ucs.URLIsValid {
+	if uc.URLIsValid {
 		HostIsUp, err := URLHostIsUp(sourceURL)
-		ucs.HostIsUp = HostIsUp
+		uc.HostIsUp = HostIsUp
 		if err != nil {
 			s.logger.Warningf("URL Host is Down at %s. %v", sourceURL, err)
 		}
 	}
-	return &ucs
+	return &uc
 }
 
-func (s *Service) Create(ctx context.Context, dto CreateLinkDTO) (l Link, err error) {
+// CreateService for CreateHandler
+func (s *Service) CreateService(ctx context.Context, dto CreateLinkDTO) (l Link, err error) {
 	l = Link{
 		Source:    dto.Source,
 		Views:     0,
@@ -75,7 +72,8 @@ func (s *Service) Create(ctx context.Context, dto CreateLinkDTO) (l Link, err er
 	return l, err
 }
 
-func (s *Service) GetLinkByID(ctx context.Context, id string) (l Link, err error) {
+// GetLinkByIDService for GetLinkByIDHandler
+func (s *Service) GetLinkByIDService(ctx context.Context, id string) (l Link, err error) {
 	l, err = s.storage.FindOne(ctx, id)
 	if err != nil {
 		return l, fmt.Errorf("error getting link '%s': %v", id, err)
