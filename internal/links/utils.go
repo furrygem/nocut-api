@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"path"
 	"unicode/utf8"
 )
 
@@ -69,4 +70,10 @@ func AddSlugToLink(l *Link) error {
 	}
 	l.Slug = slug
 	return nil
+}
+
+// AppendPrefixToURL Appends specified prefix to the beginning of the URL
+func AppendPrefixToURL(prefix string, url string) string {
+	r := path.Join("/", prefix, url)
+	return r
 }
