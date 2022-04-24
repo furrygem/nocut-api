@@ -13,11 +13,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	linksURL = "/links"
-	linkURL  = "/:slug"
-)
-
 type handler struct {
 	logger  logging.Logger
 	service Service
@@ -37,12 +32,22 @@ func NewHandler(logger logging.Logger, storage Storage, linkTTL time.Duration) h
 	}
 }
 
-func (h *handler) Register(router *mux.Router) {
+func (h *handler) Register(router *mux.Router, urlPrefix string) {
+	Links := "/links"
+	LinkByID := "/links/{id}"
+	CheckLink := "/url/{b64url}/check"
+
+	if urlPrefix != "" {
+		Links = AppendPrefixToURL(urlPrefix, "/links")
+		LinkByID = AppendPrefixToURL(urlPrefix, "/links/{id}")
+		CheckLink = AppendPrefixToURL(urlPrefix, "/url/{b64url}/check")
+	}
+
 	// router.HandleFunc("/links", h.GetList).Methods("GET")
-	router.HandleFunc("/links", h.CreateHandler).Methods("POST")
-	router.HandleFunc("/links/{id}", h.GetLinkByIDHandler).Methods("GET")
+	router.HandleFunc(Links, h.CreateHandler).Methods("POST")
+	router.HandleFunc(LinkByID, h.GetLinkByIDHandler).Methods("GET")
 	router.HandleFunc("/{slug}", h.GetLinkSlugHandler).Methods("GET")
-	router.HandleFunc("/url/{b64url}/check", h.CheckLinkHandler).Methods("GET")
+	router.HandleFunc(CheckLink, h.CheckLinkHandler).Methods("GET")
 }
 
 func (h *handler) CheckLinkHandler(w http.ResponseWriter, r *http.Request) {

@@ -83,6 +83,6 @@ func (as *Apiserver) configureLogger(c *Config) error {
 func (as *Apiserver) configureRouterMongo(c *Config) error {
 	storage := db.NewStorage(as.MongoDatabase, c.MongoDB.Collection, &as.Logger)
 	han := links.NewHandler(as.Logger, storage, c.MongoDB.LinkTTL)
-	han.Register(as.Router)
+	han.Register(as.Router, c.APIPrefix)
 	return nil
 }
