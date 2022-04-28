@@ -4,7 +4,7 @@ URL shortener API.
 
 ## Development deployment
 
-Development deployment consists of docker-compose, that runs 
+Development deployment consists of docker-compose, that runs
 
 - mongo
 - mongo-express
@@ -13,6 +13,7 @@ Development deployment consists of docker-compose, that runs
 ### Quick start
 
 Clone the repository and cd to it
+
 ```bash
 git clone https://github.com/furrygem/nocut-api.git
 cd nocut-api
@@ -41,7 +42,6 @@ If startup is successful, 3 services will be ran.
 | mongo         | MongoDB                                                            | 27017:27017   |
 | mongo-express | Express-based web interface for mongodb                            | 8081:8081     |
 | nocut-api-air | Air golang live application reloader, running the golang nocut API | 8080:8080     |
-
 
 ### Configuration
 
