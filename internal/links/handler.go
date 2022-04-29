@@ -46,7 +46,8 @@ func (h *handler) Register(router *mux.Router, urlPrefix string) {
 	// router.HandleFunc("/links", h.GetList).Methods("GET")
 	router.HandleFunc(Links, h.CreateHandler).Methods("POST")
 	router.HandleFunc(LinkByID, h.GetLinkByIDHandler).Methods("GET")
-	router.HandleFunc("/{slug}", h.GetLinkSlugHandler).Methods("GET")
+	router.HandleFunc(Links, h.GetLinkBySlugHandler).Methods("GET").Queries("slug", "{slug:[0-9A-Za-z_-]+}")
+	router.HandleFunc("/{slug}", h.UseLinkSlugHandler).Methods("GET")
 	router.HandleFunc(CheckLink, h.CheckLinkHandler).Methods("GET")
 }
 
@@ -69,7 +70,7 @@ func (h *handler) CheckLinkHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *handler) GetLinkSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handler) UseLinkSlugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 	id, err := URLToID(slug)
@@ -120,6 +121,24 @@ func (h *handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 func (h *handler) GetLinkByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
+	link, err := h.service.GetLinkByIDService(context.Background(), id)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	resp, _ := json.Marshal(link)
+	w.Write(resp)
+	return
+}
+
+func (h *handler) GetLinkBySlugHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+	id, err := URLToID(slug)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	link, err := h.service.GetLinkByIDService(context.Background(), id)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

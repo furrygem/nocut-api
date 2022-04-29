@@ -60,6 +60,7 @@ func (s *Service) CreateService(ctx context.Context, dto CreateLinkDTO) (l Link,
 	if isDup {
 		s.logger.Warnf("Duplicate link %s. %v", dto.Source, err)
 		l, err = s.storage.FindOneBySource(ctx, dto.Source)
+		l.Slug, err = IDToURL(l.ID)
 		return l, err
 	}
 	if err != nil {
