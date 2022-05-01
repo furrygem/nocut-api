@@ -2,17 +2,19 @@ package apiserver
 
 import (
 	"io/ioutil"
+	"log"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	BindAddr  string         `yaml:"bind_addr" json:"bind_addr"`
-	BindPort  uint16         `yaml:"bind_port" json:"bind_port"`
-	LogLevel  string         `yaml:"log_level" json:"log_level"`
-	MongoDB   *MongoDBConfig `yaml:"mongodb"`
-	APIPrefix string         `yaml:"api_prefix" json:"api_prefix"`
+	BindAddr      string         `yaml:"bind_addr" json:"bind_addr"`
+	BindPort      uint16         `yaml:"bind_port" json:"bind_port"`
+	LogLevel      string         `yaml:"log_level" json:"log_level"`
+	MongoDB       *MongoDBConfig `yaml:"mongodb"`
+	APIPrefix     string         `yaml:"api_prefix" json:"api_prefix"`
+	BlackListURLs []string       `yaml:"blacklist_urls" json:"blacklist_urls"`
 }
 
 type MongoDBConfig struct {
@@ -70,11 +72,12 @@ LogLevel: info
 */
 func NewConfig() *Config {
 	return &Config{
-		BindAddr:  "0.0.0.0",
-		BindPort:  8080,
-		LogLevel:  "info",
-		MongoDB:   NewMongoDBConfig(),
-		APIPrefix: "/api",
+		BindAddr:      "0.0.0.0",
+		BindPort:      8080,
+		LogLevel:      "info",
+		MongoDB:       NewMongoDBConfig(),
+		APIPrefix:     "/api",
+		BlackListURLs: []string{"localhost"},
 	}
 }
 
@@ -87,5 +90,6 @@ func (c *Config) FromYAML(path string) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("%v", c.BlackListURLs)
 	return c.MongoDB.prepare()
 }

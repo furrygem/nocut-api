@@ -3,6 +3,7 @@ package links
 import (
 	"fmt"
 	"math/big"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -43,11 +44,23 @@ func URLHostIsUp(sourceURL string) (bool, error) {
 }
 
 // URLIsValid checks if specified URL can be parsed and is absolute
-func URLIsValid(sourceURL string) (bool, error) {
+func URLIsValid(sourceURL string, blackListedURls []string) (bool, error) {
 	u, err := url.Parse(sourceURL)
+
 	if err != nil {
 		return false, err
 	}
+
+	if StringInSlice(u.Hostname(), blackListedURls) {
+		return false, fmt.Errorf("URL %s is blacklisted", sourceURL)
+	}
+
+	ip := net.ParseIP(u.Hostname())
+
+	if ip != nil && (ip.IsPrivate() || ip.IsLoopback()) {
+		return false, fmt.Errorf("Private IP addresses and loopbacks are not allowed. %s", u.Hostname())
+	}
+
 	if !(u.IsAbs()) {
 		return false, fmt.Errorf("URL %s is not absolute", sourceURL)
 	}
@@ -76,4 +89,14 @@ func AddSlugToLink(l *Link) error {
 func AppendPrefixToURL(prefix string, url string) string {
 	r := path.Join("/", prefix, url)
 	return r
+}
+
+// StringInSlice checks if string s is in the array of strings arr
+func StringInSlice(s string, arr []string) bool {
+	for _, v := range arr {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }

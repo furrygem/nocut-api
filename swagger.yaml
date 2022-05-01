@@ -1,0 +1,114 @@
+openapi: 3.0.0
+
+info: 
+  title: "test"
+  version: "1.0"
+
+paths:
+  /links:
+    summary: "Links"
+    post:
+      summary: "Create new link"
+      requestBody:
+        description: "Link"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkDTO'
+      description: "Creates new link, if link with specified `source` exists, returns it"
+      responses:
+        '201':
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Link'
+
+  /links/{id}:
+    summary: "Link by ID"
+    get:
+      summary: "Get link info by ID"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          explode: true
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Link'
+  /links/{?slug}:
+    summary: "Link by slug"
+    get:
+      summary: "Get link info by slug"
+      parameters:
+        - in: query
+          name: "slug"
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-zA-Z]{16,}$'
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/Link'
+        '404':
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "error getting link '626c66c679af80659b7affba': Failed to fine link by id '626c66c679af80659b7affba'. Batch Length is 0"
+
+
+components:
+  schemas:
+    CreateLinkDTO:
+      title: "Link Creation Data Transfer Object"
+      type: object
+      properties:
+        source:
+          format: link
+          type: string
+          description: "URL of source resource"
+          example: "https://example.com/resource"
+      required:
+        - source
+    Link:
+      title: "Link Object"
+      type: object
+      properties:
+        created_at:
+          description: "Date-time representing link creation date"
+          type: string
+          format: date-time
+        expire_at:
+          description: "Date-time representing link expiration date"
+          type: string
+          format: date-time
+        id:
+          description: "Link ObjectID value"
+          type: string
+          example: "626c66c679af80659b7affba"
+        slug:
+          description: "Slug(base62 representation of ObjectID) for link"
+          type: string
+          pattern: '^[0-9a-zA-Z]{16,}$'
+          example: "DC9aDfFm9TPGHLjY"
+        source:
+          description: "Source URL"
+          type: string
+          example: "https://example.com/resource"
+        ttl_milliseconds:
+          description: "Link remaining TTL in milliseconds"
+          type: integer
+          example: 179698

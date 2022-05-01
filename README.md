@@ -56,6 +56,7 @@ bind_addr: <IP address to host application on> # Default: 0.0.0.0
 bind_port: <Port number to host application on> # Default: 8080
 log_level: <Logrus-supported logging level> # Default: info
 api_prefix: <API prefix> # Default: "/api"
+blacklist_urls: <List Of blacklisted URLs> # Default ["localhost"]
 mongodb:
  host: <MongoDB host> # Default: 127.0.0.1
  port: <MongoDB port> # Default: 27017

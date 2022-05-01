@@ -10,9 +10,10 @@ import (
 
 // Service object
 type Service struct {
-	storage Storage
-	logger  *logging.Logger
-	linkTTL time.Duration
+	storage         Storage
+	blackListedURls []string
+	logger          *logging.Logger
+	linkTTL         time.Duration
 }
 
 // CheckLinkService for CheckLinkHandler
@@ -27,7 +28,11 @@ func (s *Service) runURLChecks(sourceURL string) *URLCheckException {
 		URLIsValid: false,
 	}
 
-	urlisvalid, err := URLIsValid(sourceURL)
+	if StringInSlice(sourceURL, s.blackListedURls) {
+		return &uc
+	}
+
+	urlisvalid, err := URLIsValid(sourceURL, s.blackListedURls)
 	uc.URLIsValid = urlisvalid
 	if err != nil {
 		s.logger.Warning("URL Host Is not valid. Assuming the host is not available.")
