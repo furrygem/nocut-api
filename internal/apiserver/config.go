@@ -2,7 +2,6 @@ package apiserver
 
 import (
 	"io/ioutil"
-	"log"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -90,6 +89,5 @@ func (c *Config) FromYAML(path string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("%v", c.BlackListURLs)
 	return c.MongoDB.prepare()
 }
