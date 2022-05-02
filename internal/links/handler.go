@@ -19,11 +19,12 @@ type handler struct {
 }
 
 // NewHandler Return pointer to links handler
-func NewHandler(logger logging.Logger, storage Storage, linkTTL time.Duration) handlers.Handler {
+func NewHandler(logger logging.Logger, storage Storage, linkTTL time.Duration, blackListedURls []string) handlers.Handler {
 	service := Service{
-		logger:  &logger,
-		storage: storage,
-		linkTTL: linkTTL,
+		logger:          &logger,
+		storage:         storage,
+		linkTTL:         linkTTL,
+		blackListedURls: blackListedURls,
 	}
 
 	return &handler{
