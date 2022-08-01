@@ -25,8 +25,8 @@ Create and populate files containing credentials for mongodb and mongo-express
 touch mongo_root_password.txt
 touch mongo_root_username.txt
 
-echo <Secure Password> > mongo_root_password.txt
-echo <Username> > mongo_root_username.txt
+echo -n <Secure Password> > mongo_root_password.txt
+echo -n <Username> > mongo_root_username.txt
 ```
 
 Start docker compose
